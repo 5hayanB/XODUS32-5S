@@ -2,13 +2,13 @@ package DecodeStage
 
 import chisel3._
 
-class StallUnit_IO extends Bundle {
+class StallUnitIO(XLEN:Int) extends Bundle {
     // Input pins
-    val RegFD_inst   : UInt = Input(UInt(32.W))
+    val RegFD_inst   : UInt = Input(UInt(XLEN.W))
     val load_en      : Bool = Input(Bool())
     val RegDA_rd_addr: UInt = Input(UInt(5.W))
-    val PC_in        : UInt = Input(UInt(32.W))
-    val stallPC_in   : UInt = Input(UInt(32.W))
+    val PC_in        : UInt = Input(UInt(XLEN.W))
+    val stallPC_in   : UInt = Input(UInt(XLEN.W))
     val rs1_addr     : UInt = Input(UInt(5.W))
     val rs2_addr     : UInt = Input(UInt(5.W))
 
@@ -16,14 +16,14 @@ class StallUnit_IO extends Bundle {
     val forward_inst: Bool = Output(Bool())
     val forward_PC  : Bool = Output(Bool())
     val stallControl: Bool = Output(Bool())
-    val inst        : UInt = Output(UInt(32.W))
-    val PC_out      : UInt = Output(UInt(32.W))
-    val stallPC_out : UInt = Output(UInt(32.W))
+    val inst        : UInt = Output(UInt(XLEN.W))
+    val PC_out      : UInt = Output(UInt(XLEN.W))
+    val stallPC_out : UInt = Output(UInt(XLEN.W))
 }
 
-class StallUnit extends Module {
+class StallUnit(XLEN:Int) extends Module {
     // Initializing IO pins
-    val io           : StallUnit_IO = IO(new StallUnit_IO)
+    val io           : StallUnit_IO = IO(new StallUnitIO(XLEN))
     val RegFD_inst   : UInt         = dontTouch(WireInit(io.RegFD_inst))
     val load_en      : Bool         = dontTouch(WireInit(io.load_en))
     val RegDA_rd_addr: UInt         = dontTouch(WireInit(io.RegDA_rd_addr))
