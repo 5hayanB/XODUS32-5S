@@ -1,3 +1,4 @@
+# REPOSITORY HAS BEEN MOVED TO [MERLEDU](https://github.com/merledu/XODUS32-5S). ALL UPDATES WILL BE MADE IN THE NEW REPOSITORY
 # XODUS32-5S
 
 A 5 stage 32 bit RISC-V I(Base) extension core
