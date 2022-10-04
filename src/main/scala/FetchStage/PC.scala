@@ -1,11 +1,9 @@
 package FetchStage
 
-//import scala.math.pow
 import chisel3._
-//import chisel3.util._
-//import chisel3.util.experimental.loadMemoryFromFile
+import chisel3.util._
 
-class FetchIO(XLEN:Int, MDEPTH:Int) extends Bundle {
+class PCIO(XLEN:Int, MDEPTH:Int) extends Bundle {
         // Input ports
         val forwardInst  : Bool = Input(Bool())
         val stallUnitInst: UInt = Input(UInt(XLEN.W))
@@ -20,56 +18,46 @@ class FetchIO(XLEN:Int, MDEPTH:Int) extends Bundle {
         val jalrPC       : UInt = Input(UInt(XLEN.W))
         
         // Output ports
-        val pcOut    : UInt = Output(UInt(XLEN.W))
-        //val instOut : UInt = Output(UInt(XLEN.W))
-        val pc4      : UInt = Output(UInt(XLEN.W))
-        val npcOut   : UInt = Output(UInt(XLEN.W))
-        val stallEn  : Bool = Output(Bool())
-        val instAddr : UInt = Output(UInt(MDEPTH.W))
+        val pcOut      : UInt = Output(UInt(XLEN.W))
+        val pc4        : UInt = Output(UInt(XLEN.W))
+        val npcOut     : UInt = Output(UInt(XLEN.W))
+        val jumpStallEn: Bool = Output(Bool())
+        val instAddr   : UInt = Output(UInt(MDEPTH.W))
 }
 
-class Fetch(XLEN:Int, MDEPTH:Int) extends Module {
+class PC(XLEN:Int, MDEPTH:Int) extends Module {
         // Initializing IO ports
-        val io : Fetch_IO = IO(new Fetch_IO(XLEN))
-        //val forwardInst  : Bool     = dontTouch(WireInit(io.forwardInst))
-        //val stallUnitInst: UInt     = dontTouch(WireInit(io.stallUnitInst))
-        //val stallPC       : UInt     = dontTouch(WireInit(io.stallPC))
-        //val forwardPC    : Bool     = dontTouch(WireInit(io.forwardPC))
-        //val stallUnitPC  : UInt     = dontTouch(WireInit(io.stallUnitPC))
-        //val brEn         : Bool     = dontTouch(WireInit(io.brEn))
-        //val jalEn        : Bool     = dontTouch(WireInit(io.jalEn))
-        //val imm           : SInt     = dontTouch(WireInit(io.imm))
-        //val regFDpc      : UInt     = dontTouch(WireInit(io.regFDpc))
-        //val jalrEn       : Bool     = dontTouch(WireInit(io.jalrEn))
-        //val jalrPC       : UInt     = dontTouch(WireInit(io.jalrPC))
+        val io           : PCIO = IO(new PCIO(XLEN, MDEPTH))
+        val forwardInst  : Bool = dontTouch(WireInit(io.forwardInst))
+        val stallUnitInst: UInt = dontTouch(WireInit(io.stallUnitInst))
+        val stallPC      : UInt = dontTouch(WireInit(io.stallPC))
+        val forwardPC    : Bool = dontTouch(WireInit(io.forwardPC))
+        val stallUnitPC  : UInt = dontTouch(WireInit(io.stallUnitPC))
+        val brEn         : Bool = dontTouch(WireInit(io.brEn))
+        val jalEn        : Bool = dontTouch(WireInit(io.jalEn))
+        val imm          : SInt = dontTouch(WireInit(io.imm))
+        val regFDpc      : UInt = dontTouch(WireInit(io.regFDpc))
+        val jalrEn       : Bool = dontTouch(WireInit(io.jalrEn))
+        val jalrPC       : UInt = dontTouch(WireInit(io.jalrPC))
         
         // Program counter
         val PC: UInt = dontTouch(RegInit(0.U(XLEN.W)))
         
-        // Instruction memory
-        //val instMem: Mem[UInt] = Mem(pow(2, 16).toInt, UInt(XLEN.W))
-        
-        // Loading instructions into instruction memory
-        //loadMemoryFromFile(instMem, "assembly/assembly.hex")
-        
         // Intermediate wires
-        val stallEn : Bool = dontTouch(WireInit(io.brEn || io.jalEn || io.jalrEn))
-        val pcOut   : UInt = dontTouch(WireInit(Mux(stallEn, 0.U, PC)))
-        //val instNum : UInt = dontTouch(WireInit(pcOut(17, 2)))
-        val pc4     : UInt = dontTouch(WireInit(pcOut + 4.U))
-        //val brJalPC : UInt = dontTouch(WireInit(io.regFDpc + io.imm.asUInt))
-        //val instOut : UInt = dontTouch(WireInit(Mux(stallEn, 0.U, instMem.read(instNum))))
-        val npc     : UInt = dontTouch(WireInit(MuxCase(pc4, Seq(
-                io.forwardPC          -> io.stallUnitPC,
-                (io.brEn || io.jalEn) -> io.regFDpc + io.imm.asUInt,
-                io.jalrEn             -> io.jalrPC
+        val jumpStallEn: Bool = dontTouch(WireInit(brEn || jalEn || jalrEn))
+        val pcOut      : UInt = dontTouch(WireInit(Mux(jumpStallEn, 0.U, PC)))
+        val pc4        : UInt = dontTouch(WireInit(pcOut + 4.U))
+        val npc        : UInt = dontTouch(WireInit(MuxCase(pc4, Seq(
+                forwardPC       -> stallUnitPC,
+                (brEn || jalEn) -> (regFDpc + imm.asUInt),
+                jalrEn          -> jalrPC
         ))))
 
-        // Wiring to output ports
+        // Wiring ports
         Seq(
-                io.pc4, io.instAddr, io.stallEn,
+                io.pc4, io.instAddr, io.jumpStallEn,
         ) zip Seq(
-                pc4, pcOut(32, 2), stallEn
+                pc4, pcOut(31, 2), jumpStallEn
         ) foreach {
                 x => x._1 := x._2
         }
@@ -81,8 +69,8 @@ class Fetch(XLEN:Int, MDEPTH:Int) extends Module {
         Seq(
                 io.pcOut, /*io.instOut,*/
         ) zip Seq(
-                (pcOut, io.stallPC), /*(instOut, stallUnitInst),*/
+                (pcOut, stallPC), /*(instOut, stallUnitInst),*/
         ) foreach {
-                x => x._1 := Mux(io.forwardInst, x._2._2, x._2._1)
+                x => x._1 := Mux(forwardInst, x._2._2, x._2._1)
         }
 }

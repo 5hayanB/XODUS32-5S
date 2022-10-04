@@ -23,7 +23,7 @@ class StallUnitIO(XLEN:Int) extends Bundle {
 
 class StallUnit(XLEN:Int) extends Module {
     // Initializing IO pins
-    val io           : StallUnit_IO = IO(new StallUnitIO(XLEN))
+    val io           : StallUnitIO = IO(new StallUnitIO(XLEN))
     val RegFD_inst   : UInt         = dontTouch(WireInit(io.RegFD_inst))
     val load_en      : Bool         = dontTouch(WireInit(io.load_en))
     val RegDA_rd_addr: UInt         = dontTouch(WireInit(io.RegDA_rd_addr))
