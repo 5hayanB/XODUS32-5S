@@ -30,7 +30,7 @@ class Top extends Module {
                 core.io.dataAddr, core.io.dataOut, core.io.storeEn, core.io.loadEn,
 
                 // Core
-                instMem.io.out
+                instMem.io.out, dataMem.io.out
         ) foreach {
                 x => x._1 := x._2
         }

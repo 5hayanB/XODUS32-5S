@@ -25,5 +25,5 @@ class DataMem() extends Module {
                 mem.write(io.addr, io.dataIn)
         }
 
-        io.out := mem.read(io.addr)
+        io.out := Mux(loadEn, mem.read(io.addr), 0.S)
 }

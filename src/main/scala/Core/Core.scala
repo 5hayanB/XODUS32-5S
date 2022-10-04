@@ -58,7 +58,7 @@ class Core(XLEN:Int, MDEPTH:Int) extends Module {
         val ALU        : ALU         = Module(new ALU)
         val ForwardUnit: ForwardUnit = Module(new ForwardUnit)
         val RegAM      : RegAM       = Module(new RegAM)
-        val Memory     : Memory      = Module(new Memory)
+        val Memory     : Memory      = Module(new Memory(XLEN, MDEPTH))
         val RegMW      : RegMW       = Module(new RegMW)
         val WriteBack  : WriteBack   = Module(new WriteBack)
 
@@ -135,7 +135,7 @@ class Core(XLEN:Int, MDEPTH:Int) extends Module {
                 // Memory
                 Memory.io.alu_in, Memory.io.rs2_data, Memory.io.str_en, Memory.io.load_en, Memory.io.sb_en,
                 Memory.io.sh_en,  Memory.io.sw_en,    Memory.io.lb_en,  Memory.io.lh_en,   Memory.io.lw_en,
-                Memory.io.lbu_en, Memory.io.lhu_en,
+                Memory.io.lbu_en, Memory.io.lhu_en,   Memory.io.dataIn,
                 
                 // RegMW
                 RegMW.io.alu_in, RegMW.io.mem_data_in, RegMW.io.rd_addr_in, RegMW.io.wr_en_in, RegMW.io.load_en_in,
@@ -151,6 +151,9 @@ class Core(XLEN:Int, MDEPTH:Int) extends Module {
                 //
                 // - Instruction Memory ports
                 io.instAddr, io.instStallEn,
+
+                // - Data Memory ports
+                io.dataAddr, io.dataOut, io.storeEn, io.loadEn,
 
                 // - RVFI ports
                 io.RegFDInst,         io.RegDA_rs1_addr,    io.RegDA_rs2_addr, io.RegDA_rs1_data, io.RegAM_rs2_data,
@@ -227,7 +230,7 @@ class Core(XLEN:Int, MDEPTH:Int) extends Module {
                 // Memory
                 RegAM.io.alu_out,    RegAM.io.rs2_data_out, RegAM.io.str_en_out, RegAM.io.load_en_out, RegAM.io.sb_en_out,
                 RegAM.io.sh_en_out,  RegAM.io.sw_en_out,    RegAM.io.lb_en_out,  RegAM.io.lh_en_out,   RegAM.io.lw_en_out,
-                RegAM.io.lbu_en_out, RegAM.io.lhu_en_out,
+                RegAM.io.lbu_en_out, RegAM.io.lhu_en_out,   dataIn,
                 
                 // RegMW
                 RegAM.io.alu_out, Memory.io.out, RegAM.io.rd_addr_out, RegAM.io.wr_en_out, RegAM.io.load_en_out,
@@ -245,7 +248,7 @@ class Core(XLEN:Int, MDEPTH:Int) extends Module {
                 PC.io.instAddr, PC.io.jumpStallEn,
 
                 // - Data Memory ports
-                io.
+                Memory.io.addrOut, Memory.io.dataOut, Memory.io.storeEn, Memory.io.loadEn,
 
                 // - RVFI ports
                 RegFD.io.instOut,         RegDA.io.rs1_addr_out, RegDA.io.rs2_addr_out, RegDA.io.rs1_data_out, RegAM.io.rs2_data_out,
